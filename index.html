@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0a141c" />
+<title>PASSPORT — วันวิทย์68</title>
+<meta name="description" content="สมุดสะสมแสตมป์ประจำฐานกิจกรรม สแกน QR ประจำฐานเพื่อสะสมแสตมป์ให้ครบตามเกณฑ์รับรางวัล" />
+<link rel="icon" href="assets/img/card-progress.webp" />
+<link rel="stylesheet" href="assets/css/fonts.css" />
+<link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+
+<!-- Fixed art + the black overlay that keeps every screen readable on top of it -->
+<div class="bg" aria-hidden="true"></div>
+<div class="bg-scrim" aria-hidden="true"></div>
+
+<!-- ============================================================
+     LANDING — orbital hero (ported from the MentoScope reference)
+     ============================================================ -->
+<main class="view view--landing" id="view-landing">
+  <div class="orbit-aura" aria-hidden="true"></div>
+
+  <div class="orbit-stage" id="orbit-stage">
+    <div class="orbit-parallax" id="orbit-parallax">
+      <div class="orbit-tilt">
+        <div class="orbit-ring" id="orbit-ring"><!-- panels injected by app.js --></div>
+      </div>
+
+      <div class="orbit-center">
+        <p class="orbit-eyebrow">spsm ● 2026</p>
+        <h1 class="wordmark">PASSPORT</h1>
+        <p class="orbit-sub-text">สแกน QR ประจำแต่ละฐาน เพื่อสะสมแสตมป์ให้ครบตามเกณฑ์</p>
+        <p class="orbit-tally" id="landing-tally">วิชาเอก 0/5 · นวัตกรรม 0/3</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="orbit-hint" aria-hidden="true">วันวิทย์68</p>
+</main>
+
+<!-- ============================================================
+     SCAN
+     ============================================================ -->
+<main class="view view--page" id="view-scan" hidden>
+  <div class="shell">
+    <header class="topbar">
+      <a class="back" href="#/">
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        กลับหน้าแรก
+      </a>
+      <div class="mode" id="scan-mode" data-mode="idle">
+        <span class="mode__dot"></span>
+        <span class="mode__label" id="scan-mode-label">STANDBY</span>
+      </div>
+    </header>
+
+    <div class="page-head">
+      <p class="kicker">SCAN QR CODE</p>
+      <h2 class="page-title">แสกน QR ประจำฐาน</h2>
+      <p class="page-sub">เล็ง QR ของฐานให้อยู่ในกรอบ ถ้าอยู่ไกลให้เลื่อนซูมเข้ามา</p>
+    </div>
+
+    <div class="scan-grid">
+      <!-- camera -->
+      <section class="panel scanner">
+        <div class="cam" id="cam">
+          <video id="video" playsinline muted autoplay></video>
+          <div class="cam__placeholder" id="cam-placeholder">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.7l1-1.7A1 1 0 0 1 9.06 4h5.88a1 1 0 0 1 .86.5l1 1.5h1.7A2.5 2.5 0 0 1 21 8.5v8A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-8Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="3.4" stroke="currentColor" stroke-width="1.5"/></svg>
+            <p class="cam__placeholder-title">กดเปิดกล้องเพื่อเริ่มสแกน</p>
+            <p class="cam__placeholder-hint">เบราว์เซอร์จะขออนุญาตใช้กล้อง กด “อนุญาต”</p>
+          </div>
+
+          <div class="cam__frame" aria-hidden="true">
+            <span class="bracket bracket--tl"></span>
+            <span class="bracket bracket--tr"></span>
+            <span class="bracket bracket--bl"></span>
+            <span class="bracket bracket--br"></span>
+            <span class="cam__target"></span>
+            <span class="cam__sweep"></span>
+          </div>
+          <p class="cam__caption" aria-hidden="true">▸▸▸ SCAN ME ◂◂◂</p>
+        </div>
+
+        <div class="controls">
+          <button class="btn btn--primary" id="btn-camera" type="button">เปิดกล้อง</button>
+
+          <div class="zoom" id="zoom-wrap" hidden>
+            <label class="zoom__label" for="zoom">ซูม</label>
+            <input class="zoom__range" id="zoom" type="range" min="1" max="4" step="0.1" value="1" />
+            <output class="zoom__value mono" id="zoom-value">1.0×</output>
+          </div>
+
+          <button class="btn btn--ghost" id="btn-torch" type="button" hidden>เปิดไฟฉาย</button>
+        </div>
+      </section>
+
+      <!-- result -->
+      <section class="panel result" id="result" data-state="idle">
+        <p class="kicker">STATUS</p>
+        <div class="result__body">
+          <span class="result__icon" id="result-icon" aria-hidden="true">◎</span>
+          <div>
+            <p class="result__title" id="result-title">ยังไม่ได้สแกน</p>
+            <p class="result__text" id="result-text">เปิดกล้องแล้วเล็งไปที่ QR ของฐาน</p>
+          </div>
+        </div>
+
+        <div class="crit-list" id="scan-crit"><!-- injected --></div>
+
+        <a class="btn btn--ghost" href="#/progress">ดูแสตมป์ของฉัน</a>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- ============================================================
+     PROGRESS
+     ============================================================ -->
+<main class="view view--page" id="view-progress" hidden>
+  <div class="shell">
+    <header class="topbar">
+      <a class="back" href="#/">
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        กลับหน้าแรก
+      </a>
+      <div class="mode" id="progress-mode" data-mode="idle">
+        <span class="mode__dot"></span>
+        <span class="mode__label mono" id="progress-mode-label">IN PROGRESS</span>
+      </div>
+    </header>
+
+    <div class="page-head">
+      <p class="kicker">MY PROGRESS</p>
+      <h2 class="page-title">แสตมป์ของฉัน</h2>
+      <p class="page-sub">ฐานที่สแกนแล้วจะมีเครื่องหมายถูกอยู่หลังชื่อฐาน</p>
+    </div>
+
+    <div class="progress-grid">
+      <section class="panel tally">
+        <div class="tally__ring">
+          <svg class="ring" viewBox="0 0 120 120" aria-hidden="true">
+            <circle class="ring__track" cx="60" cy="60" r="52"></circle>
+            <circle class="ring__fill" id="ring-fill" cx="60" cy="60" r="52"></circle>
+          </svg>
+          <p class="tally__num"><b id="tally-count">0</b><span id="tally-total">/19</span></p>
+        </div>
+        <p class="tally__label">แสตมป์ที่สะสมแล้ว</p>
+
+        <div class="crit-list" id="progress-crit"><!-- injected --></div>
+
+        <p class="tally__done" id="tally-done" hidden>ครบถ้วน!</p>
+        <a class="btn btn--primary" id="tally-cta" href="#/scan">สแกนฐานต่อไป</a>
+        <a class="btn btn--ghost" href="#/reward">กติกาการรับรางวัล</a>
+      </section>
+
+      <section class="panel stamps">
+        <div id="stamp-groups"><!-- injected by app.js --></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- ============================================================
+     REWARD — rules + the panel a teacher checks before handing a prize
+     ============================================================ -->
+<main class="view view--page" id="view-reward" hidden>
+  <div class="shell">
+    <header class="topbar">
+      <a class="back" href="#/">
+        <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        กลับหน้าแรก
+      </a>
+      <div class="mode" id="reward-mode" data-mode="idle">
+        <span class="mode__dot"></span>
+        <span class="mode__label mono" id="reward-mode-label">NOT YET</span>
+      </div>
+    </header>
+
+    <div class="page-head">
+      <p class="kicker">REWARD</p>
+      <h2 class="page-title">กติกาการรับรางวัล</h2>
+      <p class="page-sub">สำหรับนักเรียน ม.1 ม.2 และ ม.3 — สะสมแสตมป์ให้ครบทั้งสองเกณฑ์ แล้วนำไปแลกรางวัลที่จุดแลกบริเวณกองกลาง</p>
+    </div>
+
+    <div class="reward-grid">
+      <!-- rules -->
+      <section class="panel rules">
+        <p class="kicker">เกณฑ์การรับรางวัล</p>
+        <ol class="rulelist" id="rulelist"><!-- injected --></ol>
+        <a class="btn btn--ghost" href="#/scan">ไปสแกนฐาน</a>
+      </section>
+
+      <!-- the thing a teacher looks at -->
+      <section class="panel verify" id="verify" data-state="locked">
+        <p class="kicker">บัตรรับรางวัล</p>
+
+        <!-- not eligible yet -->
+        <div class="verify__locked" id="verify-locked">
+          <span class="verify__icon" aria-hidden="true">🔒</span>
+          <p class="verify__title">ยังไม่ผ่านเกณฑ์</p>
+          <p class="verify__text" id="verify-need">สะสมแสตมป์ให้ครบตามเกณฑ์ด้านซ้ายก่อน</p>
+        </div>
+
+        <!-- eligible -->
+        <div class="verify__open" id="verify-open" hidden>
+          <p class="verify__pass">ผ่านเกณฑ์ · พร้อมรับรางวัล</p>
+
+          <div class="vcard">
+            <div class="vcard__row">
+              <span class="vcard__k" id="verify-major-k">วิชาเอก</span>
+              <span class="vcard__v mono" id="verify-major">0</span>
+            </div>
+            <div class="vcard__row">
+              <span class="vcard__k" id="verify-innovation-k">นวัตกรรม/นิทรรศการ</span>
+              <span class="vcard__v mono" id="verify-innovation">0</span>
+            </div>
+            <div class="vcard__row">
+              <span class="vcard__k">ช่วงเวลาที่สแกน</span>
+              <span class="vcard__v mono" id="verify-span">-</span>
+            </div>
+          </div>
+
+          <details class="vlog">
+            <summary>ดูรายการฐานที่สแกน (<span id="verify-log-count">0</span>)</summary>
+            <ol class="vlog__list" id="verify-log"><!-- injected --></ol>
+          </details>
+        </div>
+
+      </section>
+    </div>
+  </div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="assets/js/jsqr.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>

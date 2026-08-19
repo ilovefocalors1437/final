@@ -1,0 +1,8 @@
+# local dev certificate made by serve.py — never commit a private key
+.devcert.pem
+.devkey.pem
+
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

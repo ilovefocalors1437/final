@@ -358,6 +358,11 @@ A fourth card, `#/event`, added from artwork and posters the user supplied. It c
 - **A four-step how-to for the app itself**, since the passport replaces a paper one and
   nobody has used it before.
 - **The three posters**, lazy-loaded, opening in an in-page lightbox.
+- **The venue map**, in its own full-width section above the poster grid. It is
+  landscape where the posters are portrait, and the pink subject-station labels
+  (SPB, GI, SG, GH, DA, SA, HA, HS, HP, HD CI, HT) only read at full width. Kept at
+  1500px so those labels survive a zoom. The map also settled the HDCI question from
+  section 3: it prints as one box, so one station is right.
 
 The lightbox is deliberately not `target="_blank"`: in the single-file build the images
 are `data:` URIs and Chrome blocks top-level navigation to those, so a new tab would

@@ -635,6 +635,9 @@ body[data-route="page"] .bg-scrim{
 }
 .poster:hover,.poster:focus-visible{ border-color:var(--accent-deep); transform:translateY(-2px); }
 .poster img{ display:block; width:100%; height:auto; }
+/* the venue map is landscape — it gets its own full-width row rather than a
+   cell in the portrait poster grid */
+.poster--wide{ margin-top:var(--s2); }
 .poster__cap{
   position:absolute; left:0; right:0; bottom:0; padding:0.5rem 0.65rem;
   font-size:0.78rem; color:var(--text);

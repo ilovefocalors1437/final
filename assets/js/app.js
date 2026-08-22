@@ -1,31 +1,62 @@
 /* ============================================================
-   Wunvit Stamp Book
+   Wunvit PASSPORT
    Static, no build step, no runtime CDN. See context.md.
    ============================================================ */
 (function () {
   'use strict';
 
   /* ------------------------------------------------------------------
-     THE BASES
-     `id` is the exact string encoded in the printed QR code (verified by
-     decoding qr code/*.png). The map is 1:1 — one code stamps one base and
-     can never satisfy another.
-     NOTE: `travel_qrcode` had no Thai name in the brief; the name below is
-     an assumption and is safe to edit here alone.
+     THE STATIONS
+     `id` is the exact string encoded in the printed QR code (every one of
+     them verified by decoding `qr code/*.png`). The map is 1:1 — one code
+     stamps one station and can never satisfy another.
+
+     Two groups, each with its own threshold, exactly as the passport states:
+       - ฐานกิจกรรมวิชาเอก              ต้องได้อย่างน้อย 5 แสตมป์
+       - ฐานนวัตกรรมและนิทรรศการ        ต้องได้อย่างน้อย 3 แสตมป์
+     Change `need` here and every counter, meter and rule text follows.
      ------------------------------------------------------------------ */
+  var GROUPS = [
+    { key: 'major',      label: 'ฐานกิจกรรมวิชาเอก',            need: 5 },
+    { key: 'innovation', label: 'ฐานนวัตกรรมและนิทรรศการแสดงผลงาน', need: 3 }
+  ];
+
   var BASES = [
-    { id: 'food_qrcode',        name: 'ฐานอาหาร',            icon: '🍜' },
-    { id: 'health_qrcode',      name: 'ฐานสุขภาพการแพทย์',    icon: '🏥' },
-    { id: 'energy_qrcode',      name: 'ฐานพลังงานและวัสดุ',    icon: '⚡' },
-    { id: 'environment_qrcode', name: 'ฐานสิ่งแวดล้อม',        icon: '♻️' },
-    { id: 'agriculture_qrcode', name: 'ฐานการเกษตร',          icon: '🌱' },
-    { id: 'space_qrcode',       name: 'ฐานเทคโนโลยีอวกาศ',    icon: '🚀' },
-    { id: 'travel_qrcode',      name: 'ฐานการเดินทางและขนส่ง', icon: '✈️' }
+    // ---- ฐานกิจกรรมวิชาเอก (11) ----
+    { id: 'gh_qrcode',   group: 'major', code: 'GH',   name: 'ฐานกิจกรรมวิชาเอก GH' },
+    { id: 'gi_qrcode',   group: 'major', code: 'GI',   name: 'ฐานกิจกรรมวิชาเอก GI' },
+    { id: 'sg_qrcode',   group: 'major', code: 'SG',   name: 'ฐานกิจกรรมวิชาเอก SG' },
+    { id: 'sa_qrcode',   group: 'major', code: 'SA',   name: 'ฐานกิจกรรมวิชาเอก SA' },
+    { id: 'ht_qrcode',   group: 'major', code: 'HT',   name: 'ฐานกิจกรรมวิชาเอก HT' },
+    { id: 'hs_qrcode',   group: 'major', code: 'HS',   name: 'ฐานกิจกรรมวิชาเอก HS' },
+    { id: 'hp_qrcode',   group: 'major', code: 'HP',   name: 'ฐานกิจกรรมวิชาเอก HP' },
+    { id: 'ha_qrcode',   group: 'major', code: 'HA',   name: 'ฐานกิจกรรมวิชาเอก HA' },
+    { id: 'da_qrcode',   group: 'major', code: 'DA',   name: 'ฐานกิจกรรมวิชาเอก DA' },
+    { id: 'hdci_qrcode', group: 'major', code: 'HDCI', name: 'ฐานกิจกรรมวิชาเอก HDCI' },
+    { id: 'spb_qrcode',  group: 'major', code: 'SPB',  name: 'ฐานกิจกรรมวิชาเอก SPB' },
+
+    // ---- ฐานนวัตกรรมและนิทรรศการแสดงผลงาน (8) ----
+    { id: 'space_qrcode',       group: 'innovation', icon: '🚀', name: 'ฐานนวัตกรรมด้านเทคโนโลยีและอวกาศ' },
+    { id: 'environment_qrcode', group: 'innovation', icon: '♻️', name: 'ฐานนวัตกรรมด้านสิ่งแวดล้อม' },
+    { id: 'agriculture_qrcode', group: 'innovation', icon: '🌱', name: 'ฐานนวัตกรรมด้านการเกษตร' },
+    { id: 'energy_qrcode',      group: 'innovation', icon: '⚡', name: 'ฐานนวัตกรรมด้านพลังงานและวัสดุ' },
+    { id: 'health_qrcode',      group: 'innovation', icon: '🏥', name: 'ฐานนวัตกรรมด้านสุขภาพและการแพทย์' },
+    { id: 'travel_qrcode',      group: 'innovation', icon: '✈️', name: 'ฐานการท่องเที่ยว' },
+    { id: 'food_qrcode',        group: 'innovation', icon: '🍜', name: 'ฐานนวัตกรรมด้านอาหาร' },
+    { id: 'exhibition_qrcode',  group: 'innovation', icon: '🏛️', name: 'นิทรรศการแสดงผลงาน' }
   ];
   var TOTAL = BASES.length;
 
   var BY_ID = {};
   BASES.forEach(function (b) { BY_ID[b.id.toLowerCase()] = b; });
+
+  function groupBases(key) {
+    return BASES.filter(function (b) { return b.group === key; });
+  }
+  function groupDef(key) {
+    for (var i = 0; i < GROUPS.length; i++) if (GROUPS[i].key === key) return GROUPS[i];
+    return null;
+  }
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -33,21 +64,21 @@
      STORAGE — per device, survives reload and offline.
      Degrades to in-memory if localStorage throws (private mode).
      ================================================================== */
-  var STORE_KEY = 'wunvit_stampbook_v1';
+  var STORE_KEY = 'wunvit_stampbook_v1';   // key kept so existing devices carry over
   var memoryFallback = null;
 
   function readStore() {
     if (memoryFallback) return memoryFallback;
     try {
       var raw = localStorage.getItem(STORE_KEY);
-      if (!raw) return { v: 1, stamps: {} };
+      if (!raw) return { v: 2, stamps: {} };
       var data = JSON.parse(raw);
       if (!data || typeof data !== 'object' || typeof data.stamps !== 'object') {
-        return { v: 1, stamps: {} };
+        return { v: 2, stamps: {} };
       }
-      return { v: 1, stamps: data.stamps || {} };
+      return { v: 2, stamps: data.stamps || {} };
     } catch (e) {
-      return { v: 1, stamps: {} };
+      return { v: 2, stamps: {} };
     }
   }
 
@@ -62,6 +93,12 @@
   }
 
   function isStamped(id) { return !!readStore().stamps[id]; }
+
+  function countIn(key) {
+    var stamps = readStore().stamps, n = 0;
+    groupBases(key).forEach(function (b) { if (stamps[b.id]) n++; });
+    return n;
+  }
   function stampedCount() {
     var stamps = readStore().stamps, n = 0;
     BASES.forEach(function (b) { if (stamps[b.id]) n++; });
@@ -72,23 +109,81 @@
     data.stamps[id] = new Date().toISOString();
     writeStore(data);
   }
-  function clearStamps() { writeStore({ v: 1, stamps: {} }); }
+  /* Every group at or above its threshold. */
+  function isEligible() {
+    return GROUPS.every(function (g) { return countIn(g.key) >= g.need; });
+  }
 
   /* ==================================================================
-     TOAST
+     NOTIFICATIONS
+     A LINE/Discord-style card that slides in at the top of the screen and
+     leaves on its own. Several can stack; the oldest is dropped so a burst
+     of scans can never bury the page.
      ================================================================== */
-  var toastEl = $('toast');
-  var toastTimer = null;
-  function toast(msg, tone) {
-    toastEl.textContent = msg;
-    toastEl.setAttribute('data-tone', tone || 'neutral');
-    toastEl.hidden = false;
-    requestAnimationFrame(function () { toastEl.classList.add('is-open'); });
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () {
-      toastEl.classList.remove('is-open');
-      setTimeout(function () { toastEl.hidden = true; }, 240);
-    }, 2600);
+  var notifHost = $('notif-host');
+  var NOTIF_MAX = 3;
+  var NOTIF_MS = 3400;
+
+  var NOTIF_ICON = { ok: '✓', warn: '↺', bad: '✕', neutral: '•' };
+
+  /* Holding the camera on a code the kid already scanned re-fires every time
+     the cooldown lapses. Messaging apps don't restack an identical card, so
+     the same message inside this window is swallowed. */
+  var NOTIF_DEDUPE_MS = 6000;
+  var lastNotifKey = '';
+  var lastNotifAt = 0;
+
+  function notify(title, body, tone) {
+    tone = tone || 'neutral';
+
+    var key = tone + '|' + title + '|' + (body || '');
+    var now = Date.now();
+    if (key === lastNotifKey && now - lastNotifAt < NOTIF_DEDUPE_MS) return null;
+    lastNotifKey = key;
+    lastNotifAt = now;
+
+    var el = document.createElement('div');
+    el.className = 'notif';
+    el.setAttribute('data-tone', tone);
+    el.innerHTML =
+      '<span class="notif__icon" aria-hidden="true">' + (NOTIF_ICON[tone] || '•') + '</span>' +
+      '<span class="notif__main">' +
+        '<span class="notif__title"></span>' +
+        (body ? '<span class="notif__body"></span>' : '') +
+      '</span>' +
+      '<button class="notif__x" type="button" aria-label="ปิดการแจ้งเตือน">×</button>' +
+      '<span class="notif__bar" aria-hidden="true"></span>';
+
+    // textContent, not innerHTML — a decoded QR payload is untrusted input and
+    // goes straight into the body of the "no match" notification.
+    el.querySelector('.notif__title').textContent = title;
+    if (body) el.querySelector('.notif__body').textContent = body;
+
+    var timer = null;
+    function dismiss() {
+      if (!el.parentNode) return;
+      clearTimeout(timer);
+      el.classList.add('is-out');
+      el.addEventListener('transitionend', function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }, { once: true });
+      // transitionend never fires if the element is already display:none
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+    }
+    el.querySelector('.notif__x').addEventListener('click', dismiss);
+
+    notifHost.appendChild(el);
+    while (notifHost.children.length > NOTIF_MAX) {
+      notifHost.removeChild(notifHost.firstChild);
+    }
+
+    // next frame, so the entry transition actually runs
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () { el.classList.add('is-in'); });
+    });
+
+    timer = setTimeout(dismiss, NOTIF_MS);
+    return el;
   }
 
   /* ==================================================================
@@ -117,28 +212,54 @@
   }
 
   /* ==================================================================
+     TIME HELPERS
+     ================================================================== */
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+  function hhmm(iso) {
+    var d = new Date(iso);
+    if (isNaN(d)) return '-';
+    return pad(d.getHours()) + ':' + pad(d.getMinutes());
+  }
+
+  /* ==================================================================
      LANDING — orbital hero
-     Six panels, the two card types alternating three times each, so the
-     ring reads full the way the reference's does.
+     Six panels, the three card types twice each, so the ring reads full
+     the way the reference's does.
      ================================================================== */
   var CARDS = {
     scan: {
       kicker: 'SCAN QR CODE',
-      sub: 'สแกนตราประทับประจำฐาน',
+      sub: 'แสกน QR ประจำฐาน',
       img: 'assets/img/card-scan.webp',
       href: '#/scan'
     },
     progress: {
       kicker: 'MY PROGRESS',
-      sub: 'ดูว่าสะสมไปกี่ฐานแล้ว',
+      sub: 'ดูว่าสะสมไปกี่แสตมป์แล้ว',
       img: 'assets/img/card-progress.webp',
       href: '#/progress'
+    },
+    reward: {
+      kicker: 'REWARD',
+      sub: 'กติกาการรับรางวัล',
+      img: 'assets/img/card-reward.webp',
+      href: '#/reward'
+    },
+    event: {
+      kicker: 'EVENT',
+      sub: 'รายละเอียดกิจกรรม',
+      img: 'assets/img/card-schedule.webp',
+      href: '#/event'
     }
   };
-  var PANELS = ['scan', 'progress', 'scan', 'progress', 'scan', 'progress'];
+  // Four types across eight panels, each type twice — same trick as before, the
+  // ring just needs more panels now to keep reading full.
+  var PANELS = ['scan', 'progress', 'reward', 'event', 'scan', 'progress', 'reward', 'event'];
 
-  var RADIUS_DESKTOP = 250;
-  var RADIUS_MOBILE = 158;
+  // Eight panels need a wider ring than six did: at r=250 the arc per panel
+  // (~196px) was narrower than the panel itself (172px), so they overlapped.
+  var RADIUS_DESKTOP = 325;
+  var RADIUS_MOBILE = 200;
   var BREAKPOINT = 720;
   var DRAG_SENS = 0.32;
   var WHEEL_SENS = 0.05;
@@ -151,7 +272,6 @@
   function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
   var panelEls = [];
-  var landingTally = $('landing-tally');
 
   function buildRing() {
     var ring = $('orbit-ring');
@@ -167,6 +287,7 @@
         '<img src="' + c.img + '" alt="" draggable="false" />' +
         '<span class="orbit-scrim" aria-hidden="true"></span>' +
         (type === 'progress' ? '<span class="orbit-badge mono" data-role="badge">0/' + TOTAL + '</span>' : '') +
+        (type === 'reward' ? '<span class="orbit-badge mono" data-role="reward-badge" hidden>ผ่านเกณฑ์</span>' : '') +
         '<span class="orbit-cap" aria-hidden="true">' +
           '<span class="orbit-kicker">' + c.kicker + '</span>' +
           '<span class="orbit-sub">' + c.sub + '</span>' +
@@ -269,36 +390,72 @@
   }
 
   /* ==================================================================
-     PROGRESS VIEW
+     STATIC LISTS — built once
      ================================================================== */
   var RING_CIRCUMFERENCE = 2 * Math.PI * 52; // r=52 in the SVG
 
-  function buildStampList() {
-    var list = $('stamp-list');
-    list.innerHTML = '';
-    BASES.forEach(function (b, i) {
-      var li = document.createElement('li');
-      li.className = 'stamp';
-      li.id = 'stamp-' + b.id;
-      li.innerHTML =
-        '<span class="stamp__icon" aria-hidden="true">' + b.icon + '</span>' +
-        '<span class="stamp__main">' +
-          '<span class="stamp__name">' + b.name +
-            '<svg class="stamp__check" viewBox="0 0 20 20" fill="none" role="img" aria-label="สแกนแล้ว">' +
-              '<circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.6"/>' +
-              '<path d="M5.8 10.3 8.7 13.1l5.5-6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
-            '</svg>' +
-          '</span>' +
-          '<span class="stamp__meta">' + String(i + 1).padStart(2, '0') + ' · ' + b.id + '</span>' +
-        '</span>';
-      list.appendChild(li);
+  var CHECK_SVG =
+    '<svg class="stamp__check" viewBox="0 0 20 20" fill="none" role="img" aria-label="สแกนแล้ว">' +
+      '<circle cx="10" cy="10" r="9" stroke="currentColor" stroke-width="1.6"/>' +
+      '<path d="M5.8 10.3 8.7 13.1l5.5-6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '</svg>';
+
+  function buildStampGroups() {
+    var host = $('stamp-groups');
+    host.innerHTML = '';
+    GROUPS.forEach(function (g) {
+      var wrap = document.createElement('section');
+      wrap.className = 'grp';
+      var rows = groupBases(g.key).map(function (b) {
+        var badge = b.code
+          ? '<span class="stamp__icon stamp__icon--code mono" aria-hidden="true">' + b.code + '</span>'
+          : '<span class="stamp__icon" aria-hidden="true">' + b.icon + '</span>';
+        return '<li class="stamp" id="stamp-' + b.id + '">' +
+          badge +
+          '<span class="stamp__main"><span class="stamp__name">' + b.name + CHECK_SVG + '</span></span>' +
+        '</li>';
+      }).join('');
+      wrap.innerHTML =
+        '<header class="grp__head">' +
+          '<p class="kicker">' + g.label + '</p>' +
+          '<span class="grp__count mono" data-role="grp-count" data-group="' + g.key + '">0/' + g.need + '</span>' +
+        '</header>' +
+        '<ul class="stamp-list">' + rows + '</ul>';
+      host.appendChild(wrap);
     });
   }
 
-  function renderProgress(freshId) {
+  function buildRuleList() {
+    var ol = $('rulelist');
+    ol.innerHTML = GROUPS.map(function (g) {
+      return '<li><b>' + g.label + '</b> ต้องได้อย่างน้อย <b>' + g.need + ' แสตมป์</b>' +
+             ' <span class="rulelist__of">(มีทั้งหมด ' + groupBases(g.key).length + ' ฐาน)</span></li>';
+    }).join('') +
+    '<li>ครบทั้งสองเกณฑ์แล้ว นำหน้าจอ <b>บัตรรับรางวัล</b> ไปแสดงที่จุดแลกรางวัลบริเวณกองกลาง</li>';
+  }
+
+  /* Criteria rows, rendered into any container that asks for them. */
+  function buildCritList(host) {
+    host.innerHTML = GROUPS.map(function (g) {
+      return '<div class="crit" data-group="' + g.key + '">' +
+        '<div class="crit__top">' +
+          '<span class="crit__label">' + g.label + '</span>' +
+          '<span class="crit__count mono"><b>0</b>/' + g.need + '</span>' +
+        '</div>' +
+        '<div class="meter"><span class="meter__fill"></span></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ==================================================================
+     RENDER
+     ================================================================== */
+  function renderAll(freshId) {
     var stamps = readStore().stamps;
     var n = stampedCount();
+    var eligible = isEligible();
 
+    /* ---- stamp rows ---- */
     BASES.forEach(function (b) {
       var li = $('stamp-' + b.id);
       if (!li) return;
@@ -313,41 +470,109 @@
       }
     });
 
-    var pct = n / TOTAL;
+    /* ---- per-group counters and criteria meters ---- */
+    GROUPS.forEach(function (g) {
+      var got = countIn(g.key);
+      var pass = got >= g.need;
+
+      Array.prototype.forEach.call(
+        document.querySelectorAll('[data-role="grp-count"][data-group="' + g.key + '"]'),
+        function (el) {
+          el.textContent = got + '/' + g.need;
+          el.classList.toggle('is-pass', pass);
+        });
+
+      Array.prototype.forEach.call(
+        document.querySelectorAll('.crit[data-group="' + g.key + '"]'),
+        function (el) {
+          el.classList.toggle('is-pass', pass);
+          el.querySelector('.crit__count b').textContent = String(got);
+          el.querySelector('.meter__fill').style.width =
+            Math.min(100, (got / g.need) * 100).toFixed(1) + '%';
+        });
+    });
+
+    /* ---- overall ring ---- */
     var ring = $('ring-fill');
     if (ring) {
       ring.style.strokeDasharray = RING_CIRCUMFERENCE.toFixed(1);
-      ring.style.strokeDashoffset = (RING_CIRCUMFERENCE * (1 - pct)).toFixed(1);
+      ring.style.strokeDashoffset = (RING_CIRCUMFERENCE * (1 - n / TOTAL)).toFixed(1);
     }
     $('tally-count').textContent = String(n);
     $('tally-total').textContent = '/' + TOTAL;
-    document.querySelector('.tally').classList.toggle('is-done', n === TOTAL);
-    $('tally-done').hidden = n !== TOTAL;
+    document.querySelector('.tally').classList.toggle('is-done', eligible);
+    $('tally-done').hidden = !eligible;
 
-    // Once every base is collected "สแกนฐานต่อไป" would be a lie, so the primary
-    // action becomes the way back out.
+    /* ---- progress CTA: "next station" is a lie once the criteria are met ---- */
     var cta = $('tally-cta');
-    if (n === TOTAL) {
-      cta.href = '#/';
-      cta.textContent = 'กลับหน้าแรก';
-    } else {
-      cta.href = '#/scan';
-      cta.textContent = 'สแกนฐานต่อไป';
-    }
+    if (eligible) { cta.href = '#/reward'; cta.textContent = 'ดูบัตรรับรางวัล'; }
+    else          { cta.href = '#/scan';   cta.textContent = 'สแกนฐานต่อไป'; }
 
+    /* ---- mode chips ---- */
     var pmode = $('progress-mode');
-    pmode.setAttribute('data-mode', n === TOTAL ? 'ok' : 'live');
-    $('progress-mode-label').textContent = n === TOTAL ? 'COMPLETE' : 'IN PROGRESS';
+    pmode.setAttribute('data-mode', eligible ? 'ok' : 'live');
+    $('progress-mode-label').textContent = eligible ? 'ELIGIBLE' : 'IN PROGRESS';
 
-    // shared counters
-    $('scan-count').textContent = String(n);
-    $('scan-total').textContent = String(TOTAL);
-    $('scan-meter').style.width = (pct * 100).toFixed(1) + '%';
-    if (landingTally) landingTally.textContent = String(n);
-    $('landing-total').textContent = String(TOTAL);
+    var rmode = $('reward-mode');
+    rmode.setAttribute('data-mode', eligible ? 'ok' : 'warn');
+    $('reward-mode-label').textContent = eligible ? 'ELIGIBLE' : 'NOT YET';
+
+    /* ---- landing ---- */
+    $('landing-tally').textContent = GROUPS.map(function (g) {
+      return (g.key === 'major' ? 'วิชาเอก ' : 'นวัตกรรม ') + countIn(g.key) + '/' + g.need;
+    }).join(' · ');
     Array.prototype.forEach.call(document.querySelectorAll('[data-role="badge"]'), function (el) {
       el.textContent = n + '/' + TOTAL;
     });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-role="reward-badge"]'), function (el) {
+      el.hidden = !eligible;
+    });
+
+    renderVerify();
+  }
+
+  /* ==================================================================
+     THE REWARD CARD
+     Shown only once both thresholds are met. It states the counts, the span
+     the scans cover, and the full log with real times — enough for a teacher
+     at the prize desk to see the work actually happened over the event rather
+     than in one burst.
+     ================================================================== */
+  function scanLog() {
+    var stamps = readStore().stamps;
+    return BASES
+      .filter(function (b) { return stamps[b.id]; })
+      .map(function (b) { return { name: b.name, at: stamps[b.id] }; })
+      .sort(function (a, b) { return a.at < b.at ? -1 : 1; });
+  }
+
+  function renderVerify() {
+    var eligible = isEligible();
+    $('verify').setAttribute('data-state', eligible ? 'open' : 'locked');
+    $('verify-locked').hidden = eligible;
+    $('verify-open').hidden = !eligible;
+
+    if (!eligible) {
+      var missing = GROUPS
+        .filter(function (g) { return countIn(g.key) < g.need; })
+        .map(function (g) { return g.label + ' อีก ' + (g.need - countIn(g.key)) + ' แสตมป์'; });
+      $('verify-need').textContent = 'ยังขาด ' + missing.join(' และ ');
+      return;
+    }
+
+    var log = scanLog();
+    // The requirement sits in the label so the value is just "how many, enough?".
+    $('verify-major-k').textContent = 'วิชาเอก (ต้อง ' + groupDef('major').need + ')';
+    $('verify-innovation-k').textContent = 'นวัตกรรม/นิทรรศการ (ต้อง ' + groupDef('innovation').need + ')';
+    $('verify-major').textContent = countIn('major') + ' ✓';
+    $('verify-innovation').textContent = countIn('innovation') + ' ✓';
+    $('verify-span').textContent = log.length
+      ? hhmm(log[0].at) + ' – ' + hhmm(log[log.length - 1].at)
+      : '-';
+    $('verify-log-count').textContent = String(log.length);
+    $('verify-log').innerHTML = log.map(function (r) {
+      return '<li><span>' + r.name + '</span><span class="mono">' + hhmm(r.at) + '</span></li>';
+    }).join('');
   }
 
   /* ==================================================================
@@ -437,7 +662,7 @@
       btn.disabled = false;
       btn.textContent = 'ปิดกล้อง';
       setMode('live', 'SCANNING');
-      setResult('idle', '◎', 'กำลังสแกน…', 'เล็ง QR code ของฐานให้อยู่ในกรอบ ถ้าอยู่ไกลให้เลื่อนซูมเข้ามา');
+      setResult('idle', '◎', 'กำลังสแกน…', 'เล็ง QR ของฐานให้อยู่ในกรอบ ถ้าอยู่ไกลให้เลื่อนซูมเข้ามา');
       rafId = requestAnimationFrame(tick);
     } catch (err) {
       btn.disabled = false;
@@ -558,8 +783,8 @@
     var r = sourceRect();
     if (!(r.sw > 0 && r.sh > 0)) return false;
     // Big enough not to throw away source detail on a 1080p stream (which is
- // what actually decides whether a distant code reads), small enough that the
- // jsQR fallback still keeps up on an older phone.
+    // what actually decides whether a distant code reads), small enough that
+    // the jsQR fallback still keeps up on an older phone.
     var maxDim = 900;
     var k = Math.min(1, maxDim / Math.max(r.sw, r.sh));
     canvas.width = Math.max(2, Math.round(r.sw * k));
@@ -611,9 +836,10 @@
       if (text !== lastHandled) buzz([40, 60, 40]);
       lastHandled = text;
       setMode('error', 'NO MATCH');
-      setResult('bad', '✕', 'QR code นี้ไม่ใช่ของฐานกิจกรรม',
-        'ที่อ่านได้คือ “' + (text.length > 40 ? text.slice(0, 40) + '…' : text) + '” — กรุณาสแกน QR code ประจำฐานอีกครั้ง');
-      toast('ไม่ใช่ QR code ของฐาน — สแกนใหม่อีกครั้ง', 'bad');
+      var short = text.length > 40 ? text.slice(0, 40) + '…' : text;
+      setResult('bad', '✕', 'QR นี้ไม่ใช่ของฐานกิจกรรม',
+        'ที่อ่านได้คือ “' + short + '” — กรุณาสแกน QR ประจำฐานอีกครั้ง');
+      notify('ไม่ใช่ QR ของฐาน', 'ที่อ่านได้: ' + short, 'bad');
       beep(200, 160);
       return;
     }
@@ -622,31 +848,42 @@
       lastHandled = text;
       setMode('warn', 'DUPLICATE');
       setResult('dup', '↺', base.name + ' — สแกนไปแล้ว',
-        'ฐานนี้ถูกประทับตราเรียบร้อยแล้ว ไปสแกนฐานอื่นที่ยังไม่ได้เก็บได้เลย');
-      toast(base.name + ' สแกนไปแล้ว', 'warn');
+        'ฐานนี้ได้แสตมป์เรียบร้อยแล้ว ไปสแกนฐานอื่นที่ยังไม่ได้เก็บได้เลย');
+      notify('สแกนฐานนี้ไปแล้ว', base.name, 'warn');
       beep(340, 140);
       buzz(60);
       return;
     }
 
+    var wasEligible = isEligible();
     addStamp(base.id);
     lastHandled = text;
-    renderProgress(base.id);
-    var n = stampedCount();
+    renderAll(base.id);
+
     camEl.classList.remove('is-hit');
     void camEl.offsetWidth;
     camEl.classList.add('is-hit');
     setMode('ok', 'STAMPED');
-    if (n === TOTAL) {
-      setResult('ok', '★', base.name + ' — ครบทุกฐานแล้ว!',
-        'เก็บครบทั้ง ' + TOTAL + ' ฐานเรียบร้อย เก่งมาก 🎉');
-      toast('เก็บครบทั้ง ' + TOTAL + ' ฐานแล้ว 🎉', 'ok');
+
+    var g = groupDef(base.group);
+    var got = countIn(base.group);
+
+    if (!wasEligible && isEligible()) {
+      setResult('ok', '★', base.name + ' — ผ่านเกณฑ์รับรางวัลแล้ว!',
+        'ครบทั้งสองเกณฑ์เรียบร้อย เปิดหน้า “กติกาการรับรางวัล” เพื่อแสดงบัตรให้คุณครู');
+      notify('ผ่านเกณฑ์รับรางวัลแล้ว 🎉', 'เปิดการ์ด “กติกาการรับรางวัล” เพื่อแสดงบัตรให้คุณครู', 'ok');
       beep(660, 120); setTimeout(function () { beep(880, 180); }, 130);
       buzz([60, 50, 60, 50, 120]);
+    } else if (got >= g.need) {
+      setResult('ok', '✓', base.name + ' — ได้แสตมป์แล้ว',
+        g.label + ' ครบเกณฑ์แล้ว (' + got + '/' + g.need + ')');
+      notify('ได้แสตมป์แล้ว +1', base.name + ' · ' + g.label + ' ครบเกณฑ์แล้ว', 'ok');
+      beep(760, 130);
+      buzz(80);
     } else {
-      setResult('ok', '✓', base.name + ' — ประทับตราแล้ว',
-        'สะสมแล้ว ' + n + ' จาก ' + TOTAL + ' ฐาน เหลืออีก ' + (TOTAL - n) + ' ฐาน');
-      toast('ประทับตรา ' + base.name + ' แล้ว', 'ok');
+      setResult('ok', '✓', base.name + ' — ได้แสตมป์แล้ว',
+        g.label + ' ' + got + '/' + g.need + ' — เหลืออีก ' + (g.need - got) + ' แสตมป์');
+      notify('ได้แสตมป์แล้ว +1', base.name + ' · ' + g.label + ' ' + got + '/' + g.need, 'ok');
       beep(760, 130);
       buzz(80);
     }
@@ -655,7 +892,13 @@
   /* ==================================================================
      ROUTER
      ================================================================== */
-  var VIEWS = { '/': 'view-landing', '/scan': 'view-scan', '/progress': 'view-progress' };
+  var VIEWS = {
+    '/': 'view-landing',
+    '/scan': 'view-scan',
+    '/progress': 'view-progress',
+    '/reward': 'view-reward',
+    '/event': 'view-event'
+  };
 
   function route() {
     var hash = (location.hash || '#/').replace(/^#/, '');
@@ -668,7 +911,7 @@
     window.scrollTo(0, 0);
 
     if (hash !== '/scan' && running) stopCamera();
-    renderProgress();
+    renderAll();
 
     if (hash === '/scan') {
       setMode('idle', 'STANDBY');
@@ -693,7 +936,10 @@
   /* ==================================================================
      BOOT
      ================================================================== */
-  buildStampList();
+  buildStampGroups();
+  buildRuleList();
+  buildCritList($('progress-crit'));
+  buildCritList($('scan-crit'));
   initOrbit();
 
   $('btn-camera').addEventListener('click', function () {
@@ -702,14 +948,25 @@
   $('zoom').addEventListener('input', applyZoom);
   $('btn-torch').addEventListener('click', toggleTorch);
 
-  $('btn-reset').addEventListener('click', function () {
-    if (stampedCount() === 0) { toast('ยังไม่มีตราประทับให้ล้าง', 'warn'); return; }
-    if (!window.confirm('ล้างตราประทับทั้งหมดของเครื่องนี้ใช่ไหม? การกระทำนี้ย้อนกลับไม่ได้')) return;
-    clearStamps();
-    lastHandled = '';
-    renderProgress();
-    toast('ล้างความคืบหน้าเรียบร้อย', 'warn');
-  });
+  /* Poster lightbox. The <img> already on the page carries the source, so the
+     single-file build's data: URI is reused rather than re-fetched. */
+  (function () {
+    var box = $('lightbox'), img = $('lightbox-img');
+    function close() { box.hidden = true; img.removeAttribute('src'); document.body.style.overflow = ''; }
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest && e.target.closest('.poster');
+      if (!btn) return;
+      var inner = btn.querySelector('img');
+      if (!inner) return;
+      img.src = inner.currentSrc || inner.src;
+      img.alt = inner.alt || '';
+      box.hidden = false;
+      document.body.style.overflow = 'hidden';
+    });
+    $('lightbox-close').addEventListener('click', close);
+    box.addEventListener('click', function (e) { if (e.target === box) close(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !box.hidden) close(); });
+  })();
 
   // Don't leave the camera running in a backgrounded tab.
   document.addEventListener('visibilitychange', function () {

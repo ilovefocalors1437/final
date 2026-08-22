@@ -70,15 +70,16 @@ def main():
     for rel in ("assets/img/card-scan.webp", "assets/img/card-progress.webp"):
         js = js.replace("'%s'" % rel, "'%s'" % data_uri(rel))
 
-    # Swap the external references for inline blocks.
-    html = html.replace(
-        '<link rel="stylesheet" href="assets/css/fonts.css" />\n'
-        '<link rel="stylesheet" href="assets/css/app.css" />',
-        "<style>\n%s\n</style>" % css)
-    html = html.replace(
-        '<script src="assets/js/jsqr.js"></script>\n'
-        '<script src="assets/js/app.js"></script>',
-        "<script>\n%s\n</script>" % js)
+    # Swap the external references for inline blocks. The links carry a
+    # ?v=<hash> cache stamp from stamp_assets.py, so match them loosely.
+    html = re.sub(
+        r'<link rel="stylesheet" href="assets/css/fonts\.css[^"]*"\s*/>\s*'
+        r'<link rel="stylesheet" href="assets/css/app\.css[^"]*"\s*/>',
+        lambda _m: "<style>\n%s\n</style>" % css, html, count=1)
+    html = re.sub(
+        r'<script src="assets/js/jsqr\.js[^"]*"></script>\s*'
+        r'<script src="assets/js/app\.js[^"]*"></script>',
+        lambda _m: "<script>\n%s\n</script>" % js, html, count=1)
     html = html.replace('<link rel="icon" href="assets/img/card-progress.webp" />',
                         '<link rel="icon" href="%s" />' % data_uri("assets/img/card-progress.webp"))
 

@@ -22,7 +22,16 @@ python build_standalone.py
 **ไม่มีการโหลดไฟล์อื่นเลยแม้แต่ไฟล์เดียว** — เอาไฟล์นี้ไฟล์เดียวไปวางแทน `index.html`
 ใน repo ก็จบ ไม่ต้องมี `assets/` ไม่ต้องห่วงว่าอะไรจะหาย
 
-แก้อะไรใน `assets/` แล้วก็รัน `python build_standalone.py` ใหม่รอบนึง
+แก้อะไรใน `assets/` แล้วรัน 2 คำสั่งนี้ก่อน commit:
+
+```bash
+python stamp_assets.py
+python build_standalone.py
+```
+
+`stamp_assets.py` สำคัญมาก — มันใส่ `?v=<hash>` ต่อท้าย css/js ทำให้เครื่องที่เคย
+เปิดเว็บไปแล้วโหลดของใหม่จริงๆ ถ้าไม่รัน เด็กที่เคยเข้าเว็บจะยังเห็นเวอร์ชันเก่าค้าง
+(เจอมาแล้วตอน deploy จริง)
 
 ---
 
@@ -261,6 +270,7 @@ context.md              บันทึกการตัดสินใจ/ส�
 serve.py                เซิร์ฟเวอร์ไว้เทสในเครื่อง (ไม่เกี่ยวกับตอน deploy)
 build_standalone.py     สร้างเวอร์ชันไฟล์เดียวไว้ที่ standalone/index.html
 make_qr_codes.py        สร้าง QR ของทุกฐานลง qr code/ (ข้ามอันที่มีแล้ว)
+stamp_assets.py         ใส่ ?v=<hash> ให้ไฟล์ css/js กัน browser ใช้ของเก่าค้าง
 image/, qr code/        ไฟล์ต้นฉบับที่พี่ให้มา
 ```
 

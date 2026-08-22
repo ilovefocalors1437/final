@@ -913,6 +913,8 @@
     if (hash !== '/scan' && running) stopCamera();
     renderAll();
 
+    if (hash === '/event') wakePosters();
+
     if (hash === '/scan') {
       setMode('idle', 'STANDBY');
       maybeAutoStart();
@@ -947,6 +949,19 @@
   });
   $('zoom').addEventListener('input', applyZoom);
   $('btn-torch').addEventListener('click', toggleTorch);
+
+  /* `loading="lazy"` is unreliable for images that were inside a hidden view at
+     load time: some browsers never re-run the intersection check once the view is
+     unhidden, so the posters stay 0x0 forever. Flipping them to eager the moment
+     the event route opens keeps the "don't fetch until needed" benefit without
+     depending on that behaviour. */
+  function wakePosters() {
+    Array.prototype.forEach.call(document.querySelectorAll('.poster img[loading="lazy"]'), function (img) {
+      img.loading = 'eager';
+      var src = img.getAttribute('src');
+      if (src) img.src = src;   // nudge browsers that already skipped it
+    });
+  }
 
   /* Poster lightbox. The <img> already on the page carries the source, so the
      single-file build's data: URI is reused rather than re-fetched. */

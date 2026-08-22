@@ -690,7 +690,6 @@ body[data-route="page"] .bg-scrim{
 .board__idrow{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
 .board__idlabel{ font-size:0.82rem; color:var(--text-faint); }
 .board__idval{ font-size:1rem; font-weight:600; color:var(--accent); letter-spacing:0.08em; }
-.board__idacts{ display:flex; gap:var(--s2); }
 .btn--sm{ min-height:34px; font-size:0.82rem; padding:0 0.75rem; width:auto; }
 
 /* compose */

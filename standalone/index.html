@@ -774,7 +774,6 @@ body[data-route="page"] .bg-scrim{
 .board__idrow{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
 .board__idlabel{ font-size:0.82rem; color:var(--text-faint); }
 .board__idval{ font-size:1rem; font-weight:600; color:var(--accent); letter-spacing:0.08em; }
-.board__idacts{ display:flex; gap:var(--s2); }
 .btn--sm{ min-height:34px; font-size:0.82rem; padding:0 0.75rem; width:auto; }
 
 /* compose */
@@ -1217,14 +1216,13 @@ body[data-route="page"] .bg-scrim{
 
     <div class="board" id="board" data-state="loading">
 
-      <!-- who you are -->
+      <!-- who you are — id is permanent once set on this device, on purpose:
+           a "change" button would let anyone retype someone else's 6 digits
+           and post under their name -->
       <section class="panel board__id">
         <div class="board__idrow">
           <span class="board__idlabel">รหัสประจำตัวของคุณ</span>
           <span class="board__idval mono" id="board-who">-</span>
-        </div>
-        <div class="board__idacts">
-          <button class="btn btn--ghost btn--sm" id="board-changeid" type="button">เปลี่ยนรหัส</button>
         </div>
       </section>
 
@@ -12863,7 +12861,9 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     $('gate-save').addEventListener('click', submitGate);
     $('gate-cancel').addEventListener('click', function () { $('board-gate').hidden = true; });
     $('board-needid').addEventListener('click', function () { requireId(); });
-    $('board-changeid').addEventListener('click', function () { openGate(''); });
+    /* no "change id" button on purpose — see the comment on .board__id in
+       index.html. The gate still opens the first time (requireId), which is
+       the only entry point admin needs too. */
 
     var ta = $('compose-input');
     var counter = $('compose-count');

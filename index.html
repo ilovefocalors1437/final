@@ -8,7 +8,7 @@
 <meta name="description" content="สมุดสะสมแสตมป์ประจำฐานกิจกรรม สแกน QR ประจำฐานเพื่อสะสมแสตมป์ให้ครบตามเกณฑ์รับรางวัล" />
 <link rel="icon" href="assets/img/card-progress.webp" />
 <link rel="stylesheet" href="assets/css/fonts.css?v=05018105" />
-<link rel="stylesheet" href="assets/css/app.css?v=d7211b4d" />
+<link rel="stylesheet" href="assets/css/app.css?v=636b2dad" />
 </head>
 <body>
 
@@ -366,14 +366,13 @@
 
     <div class="board" id="board" data-state="loading">
 
-      <!-- who you are -->
+      <!-- who you are — id is permanent once set on this device, on purpose:
+           a "change" button would let anyone retype someone else's 6 digits
+           and post under their name -->
       <section class="panel board__id">
         <div class="board__idrow">
           <span class="board__idlabel">รหัสประจำตัวของคุณ</span>
           <span class="board__idval mono" id="board-who">-</span>
-        </div>
-        <div class="board__idacts">
-          <button class="btn btn--ghost btn--sm" id="board-changeid" type="button">เปลี่ยนรหัส</button>
         </div>
       </section>
 
@@ -439,6 +438,6 @@
 
 <script src="assets/js/jsqr.js?v=bc40c8a1"></script>
 <script src="assets/js/app.js?v=fb1efc03"></script>
-<script src="assets/js/board.js?v=8f307de4"></script>
+<script src="assets/js/board.js?v=e5c22e0f"></script>
 </body>
 </html>

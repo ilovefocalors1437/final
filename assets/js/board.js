@@ -406,7 +406,9 @@
     $('gate-save').addEventListener('click', submitGate);
     $('gate-cancel').addEventListener('click', function () { $('board-gate').hidden = true; });
     $('board-needid').addEventListener('click', function () { requireId(); });
-    $('board-changeid').addEventListener('click', function () { openGate(''); });
+    /* no "change id" button on purpose — see the comment on .board__id in
+       index.html. The gate still opens the first time (requireId), which is
+       the only entry point admin needs too. */
 
     var ta = $('compose-input');
     var counter = $('compose-count');

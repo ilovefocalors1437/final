@@ -27,7 +27,7 @@ INDEX = os.path.join(ROOT, "index.html")
 # only the files the browser executes — images are content-addressed enough by
 # their own names, and restamping them would bloat the diff on every build
 TARGETS = ("assets/css/fonts.css", "assets/css/app.css",
-           "assets/js/jsqr.js", "assets/js/app.js")
+           "assets/js/jsqr.js", "assets/js/app.js", "assets/js/board.js")
 
 
 def short_hash(rel):

@@ -210,6 +210,10 @@
     return el;
   }
 
+  /* board.js posts through the same notification stack rather than building
+     a second one. */
+  window.wunvitNotify = function (title, body, tone) { notify(title, body, tone); };
+
   /* ==================================================================
      FEEDBACK — short beep + haptics on a decode.
      ================================================================== */
@@ -955,7 +959,8 @@
     '/scan': 'view-scan',
     '/progress': 'view-progress',
     '/reward': 'view-reward',
-    '/event': 'view-event'
+    '/event': 'view-event',
+    '/board': 'view-board'
   };
 
   function route() {
@@ -972,6 +977,11 @@
     renderAll();
 
     if (hash === '/event') wakePosters();
+
+    /* board.js owns its own polling; tell it when it is on screen so it never
+       fetches in the background */
+    if (hash === '/board') { if (window.wunvitBoardEnter) window.wunvitBoardEnter(); }
+    else { if (window.wunvitBoardLeave) window.wunvitBoardLeave(); }
 
     if (hash === '/scan') {
       setMode('idle', 'STANDBY');

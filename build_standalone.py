@@ -65,9 +65,13 @@ def main():
     css = inline_css_urls(read("assets/css/fonts.css"), "assets/css") + "\n" \
         + inline_css_urls(app_css, "assets/css")
 
-    js = read("assets/js/jsqr.js") + "\n;\n" + read("assets/js/app.js")
+    # board.js goes last: it calls window.wunvitNotify, which app.js defines.
+    js = (read("assets/js/jsqr.js") + "\n;\n"
+          + read("assets/js/app.js") + "\n;\n"
+          + read("assets/js/board.js"))
     # The card images are referenced from JS as plain paths.
-    for rel in ("assets/img/card-scan.webp", "assets/img/card-progress.webp"):
+    for rel in ("assets/img/card-scan.webp", "assets/img/card-progress.webp",
+                "assets/img/card-reward.webp", "assets/img/card-schedule.webp"):
         js = js.replace("'%s'" % rel, "'%s'" % data_uri(rel))
 
     # Swap the external references for inline blocks. The links carry a
@@ -78,7 +82,8 @@ def main():
         lambda _m: "<style>\n%s\n</style>" % css, html, count=1)
     html = re.sub(
         r'<script src="assets/js/jsqr\.js[^"]*"></script>\s*'
-        r'<script src="assets/js/app\.js[^"]*"></script>',
+        r'<script src="assets/js/app\.js[^"]*"></script>\s*'
+        r'<script src="assets/js/board\.js[^"]*"></script>',
         lambda _m: "<script>\n%s\n</script>" % js, html, count=1)
     html = html.replace('<link rel="icon" href="assets/img/card-progress.webp" />',
                         '<link rel="icon" href="%s" />' % data_uri("assets/img/card-progress.webp"))

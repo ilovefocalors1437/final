@@ -1202,10 +1202,9 @@ body[data-route="page"] .bg-scrim{
         <svg viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M10 3 5 8l5 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         กลับหน้ากิจกรรม
       </a>
-      <div class="mode" data-mode="live">
-        <span class="mode__dot"></span>
-        <span class="mode__label mono"><span id="board-count">0</span> ข้อความ</span>
-      </div>
+      <!-- message count chip removed on request; board-count kept as a hidden
+           span so board.js's textContent write has nothing to break on -->
+      <span id="board-count" hidden>0</span>
     </header>
 
     <div class="page-head">

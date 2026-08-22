@@ -774,11 +774,6 @@ body[data-route="page"] .bg-scrim{
 .board__idrow{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
 .board__idlabel{ font-size:0.82rem; color:var(--text-faint); }
 .board__idval{ font-size:1rem; font-weight:600; color:var(--accent); letter-spacing:0.08em; }
-.board__adminbadge{
-  font-family:var(--font-mono); font-size:0.62rem; letter-spacing:0.1em;
-  color:var(--warn); border:1px solid var(--warn); background:var(--warn-tint);
-  border-radius:var(--r-full); padding:2px 8px;
-}
 .board__idacts{ display:flex; gap:var(--s2); }
 .btn--sm{ min-height:34px; font-size:0.82rem; padding:0 0.75rem; width:auto; }
 
@@ -855,6 +850,14 @@ body[data-route="page"] .bg-scrim{
 }
 .gate__input:focus{ border-color:var(--accent); }
 .gate__err{ font-size:0.8rem; color:var(--bad); min-height:1.1em; }
+.gate__acts{ display:flex; gap:var(--s2); }
+.gate__acts .btn{ flex:1; }
+/* ช่องกรอกยาวเกิน 6 ได้ (กรณีพิมพ์รหัสยาว) — ลดขนาดตัวอักษรตามความยาว */
+.gate__input{ font-size:clamp(0.95rem, 4.5vw, 1.5rem); }
+
+/* ตอบกลับซ้อนได้ไม่จำกัด — พอถึงชั้นลึกสุดก็เลิกเยื้อง ไม่งั้นบีบจนอ่านไม่ออก */
+.post__replies--flat{ padding-left:0; border-left:0; }
+.post__replies--flat > .post{ border-left:2px solid var(--line-soft); border-radius:0 var(--r-md) var(--r-md) 0; }
 
 </style>
 </head>
@@ -1219,11 +1222,9 @@ body[data-route="page"] .bg-scrim{
         <div class="board__idrow">
           <span class="board__idlabel">รหัสประจำตัวของคุณ</span>
           <span class="board__idval mono" id="board-who">-</span>
-          <span class="board__adminbadge" id="board-admin-badge" hidden>ADMIN</span>
         </div>
         <div class="board__idacts">
           <button class="btn btn--ghost btn--sm" id="board-changeid" type="button">เปลี่ยนรหัส</button>
-          <button class="btn btn--ghost btn--sm" id="board-adminbtn" type="button">โหมดแอดมิน</button>
         </div>
       </section>
 
@@ -1266,9 +1267,13 @@ body[data-route="page"] .bg-scrim{
     <h3 class="gate__title">กรอกรหัสประจำตัว</h3>
     <p class="gate__text">ตัวเลข 6 หลัก ใช้แสดงว่าใครเป็นคนพูด เก็บไว้ในเครื่องนี้ ไม่ต้องกรอกซ้ำ</p>
     <input class="gate__input mono" id="gate-input" type="text" inputmode="numeric"
-           maxlength="6" pattern="[0-9]{6}" placeholder="000000" />
+           autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+           placeholder="000000" />
     <p class="gate__err" id="gate-err"></p>
-    <button class="btn btn--primary" id="gate-save" type="button">บันทึก</button>
+    <div class="gate__acts">
+      <button class="btn btn--primary" id="gate-save" type="button">บันทึก</button>
+      <button class="btn btn--ghost" id="gate-cancel" type="button">ยกเลิก</button>
+    </div>
   </div>
 </div>
 
@@ -12457,25 +12462,25 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
    ในงานที่ผู้ใช้เป็นเด็กออกไปทั้งหมด)
 
    คุยกับ Supabase ผ่าน REST ตรงๆ ไม่โหลด SDK เลย เพราะทั้งเว็บนี้
-   ยึดหลัก "ไม่ดึงอะไรจาก CDN ตอนรัน" อยู่แล้ว และ SDK จะหนักกว่า
-   โค้ดนี้หลายเท่าโดยไม่ได้อะไรเพิ่ม
+   ยึดหลัก "ไม่ดึงอะไรจาก CDN ตอนรัน" อยู่แล้ว
+
+   เรื่องโหมดแอดมิน: ในไฟล์นี้ไม่มีทั้งสตริงลับและเลขประจำตัวของแอดมิน
+   มีแค่กติกาว่า "ถ้าสิ่งที่พิมพ์ไม่ใช่เลข 6 หลัก ให้ลองส่งไปถาม server"
+   ตัวความลับอยู่ในตารางที่ anon อ่านไม่ได้ ฝั่ง Supabase เท่านั้น
    ============================================================ */
 (function () {
   'use strict';
 
-  /* ------------------------------------------------------------------
-     ตั้งค่า
-     anon / publishable key ถูกออกแบบมาให้เปิดเผยได้ — มันอยู่ในหน้าเว็บ
-     ที่ทุกคนเปิดดูได้อยู่แล้ว สิ่งที่กันจริงคือ RLS ใน supabase-setup.sql
-     ไม่ใช่การซ่อน key ห้ามเอา service_role / sb_secret_ มาใส่ตรงนี้เด็ดขาด
-     ------------------------------------------------------------------ */
+  /* anon / publishable key ถูกออกแบบมาให้เปิดเผยได้ สิ่งที่กันจริงคือ RLS
+     ห้ามเอา service_role / sb_secret_ มาใส่ตรงนี้เด็ดขาด */
   var SUPABASE_URL = 'https://xieizmzniwwokwacbjuq.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_ICfckiY0JbaJmUMYh6loIg_FGcyHry_';
 
   var CONFIGURED = !!(SUPABASE_URL && SUPABASE_KEY);
 
   var MAX_LEN = 500;
-  var POLL_MS = 15000;     // รีเฟรชเงียบๆ ระหว่างเปิดหน้ากระดานอยู่
+  var POLL_MS = 15000;
+  var MAX_INDENT = 5;      // ซ้อนได้ไม่จำกัด แต่หยุดเยื้องหลังชั้นที่ 5 กันล้นจอมือถือ
 
   var ID_KEY    = 'wunvit_student_id';
   var ADMIN_KEY = 'wunvit_admin_secret';
@@ -12503,10 +12508,9 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   }
 
   function listPosts() {
-    // RLS ซ่อนอันที่ลบแล้วให้เอง จึงไม่ต้องกรองซ้ำตรงนี้
     var url = SUPABASE_URL + '/rest/v1/posts'
             + '?select=id,student_id,body,parent_id,pinned,created_at'
-            + '&order=pinned.desc,created_at.desc&limit=400';
+            + '&order=created_at.desc&limit=500';
     return fetch(url, { headers: headers() }).then(function (r) {
       if (!r.ok) throw new Error('โหลดไม่สำเร็จ (' + r.status + ')');
       return r.json();
@@ -12523,12 +12527,26 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     }).then(function (r) {
       if (r.ok) return true;
       return r.text().then(function (t) {
-        // ข้อความจาก trigger กันสแปม
         if (t.indexOf('posting too fast') !== -1) throw new Error('พิมพ์ถี่เกินไป รอสักครู่แล้วลองใหม่');
         if (r.status === 401 || r.status === 403) throw new Error('ยังไม่ได้ตั้งค่าสิทธิ์ใน Supabase');
         throw new Error('ส่งไม่สำเร็จ (' + r.status + ')');
       });
     });
+  }
+
+  /* ส่งสิ่งที่ผู้ใช้พิมพ์ไปถาม server ว่าเป็นรหัสแอดมินไหม
+     ถ้าใช่ server จะคืนเลขประจำตัวที่ใช้แสดงกลับมา */
+  function tryAdminLogin(secret) {
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/admin_login', {
+      method: 'POST',
+      headers: headers(),
+      body: JSON.stringify({ p_secret: secret })
+    }).then(function (r) {
+      if (!r.ok) return null;
+      return r.json().then(function (v) {
+        return (typeof v === 'string' && /^[0-9]{6}$/.test(v)) ? v : null;
+      });
+    }).catch(function () { return null; });
   }
 
   function moderate(postId, action) {
@@ -12538,7 +12556,6 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       body: JSON.stringify({ p_secret: adminSecret(), p_post_id: postId, p_action: action })
     }).then(function (r) {
       if (r.ok) return true;
-      if (r.status === 403 || r.status === 400) throw new Error('รหัสแอดมินไม่ถูกต้อง');
       throw new Error('ทำรายการไม่สำเร็จ (' + r.status + ')');
     });
   }
@@ -12556,7 +12573,6 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     return p(d.getDate()) + '/' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
   }
 
-  /* ---------- แจ้งเตือน (ยืมของ app.js ถ้ามี) ---------- */
   function say(title, body, tone) {
     if (window.wunvitNotify) window.wunvitNotify(title, body, tone);
   }
@@ -12568,11 +12584,10 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 
   function setState(name) { $('board').setAttribute('data-state', name); }
 
-  /* ทุกอย่างที่มาจากผู้ใช้ผ่าน textContent เท่านั้น ไม่มี innerHTML
-     — ข้อความเด็กพิมพ์คือ input ที่เชื่อไม่ได้ */
-  function postEl(p, isReply) {
+  /* ข้อความผู้ใช้ผ่าน textContent เท่านั้น ไม่มี innerHTML ที่ไหนเลย */
+  function postEl(p, depth) {
     var el = document.createElement('article');
-    el.className = 'post' + (isReply ? ' post--reply' : '') + (p.pinned ? ' is-pinned' : '');
+    el.className = 'post' + (depth ? ' post--reply' : '') + (p.pinned && !depth ? ' is-pinned' : '');
     el.setAttribute('data-id', p.id);
 
     var head = document.createElement('header');
@@ -12583,7 +12598,7 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     who.textContent = p.student_id;
     head.appendChild(who);
 
-    if (p.pinned) {
+    if (p.pinned && !depth) {
       var pin = document.createElement('span');
       pin.className = 'post__pin';
       pin.textContent = 'ปักหมุด';
@@ -12594,7 +12609,6 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     when.className = 'post__when';
     when.textContent = ago(p.created_at);
     head.appendChild(when);
-
     el.appendChild(head);
 
     var body = document.createElement('p');
@@ -12605,24 +12619,23 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     var acts = document.createElement('div');
     acts.className = 'post__acts';
 
-    if (!isReply) {
-      var rb = document.createElement('button');
-      rb.type = 'button';
-      rb.className = 'post__act';
-      rb.textContent = 'ตอบกลับ';
-      rb.addEventListener('click', function () { openReply(el, p.id); });
-      acts.appendChild(rb);
-    }
+    // ตอบกลับได้ทุกชั้น ไม่ใช่แค่ชั้นบนสุด
+    var rb = document.createElement('button');
+    rb.type = 'button';
+    rb.className = 'post__act';
+    rb.textContent = 'ตอบกลับ';
+    rb.addEventListener('click', function () { openReply(el, p.id); });
+    acts.appendChild(rb);
 
+    /* ปุ่มพวกนี้โผล่เฉพาะเครื่องที่ผ่านการล็อกอินแอดมินแล้วเท่านั้น
+       เครื่องอื่นไม่เห็นแม้แต่ร่องรอยว่ามีระบบนี้อยู่ */
     if (isAdmin()) {
-      if (!isReply) {
+      if (!depth) {
         var pb = document.createElement('button');
         pb.type = 'button';
         pb.className = 'post__act post__act--admin';
         pb.textContent = p.pinned ? 'เลิกปักหมุด' : 'ปักหมุด';
-        pb.addEventListener('click', function () {
-          act(p.id, p.pinned ? 'unpin' : 'pin');
-        });
+        pb.addEventListener('click', function () { act(p.id, p.pinned ? 'unpin' : 'pin'); });
         acts.appendChild(pb);
       }
       var db = document.createElement('button');
@@ -12636,12 +12649,12 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
       acts.appendChild(db);
     }
 
-    if (acts.children.length) el.appendChild(acts);
+    el.appendChild(acts);
     return el;
   }
 
   function openReply(hostEl, parentId) {
-    if (hostEl.querySelector('.replybox')) return;
+    if (hostEl.querySelector(':scope > .replybox')) return;
     if (!requireId()) return;
 
     var box = document.createElement('div');
@@ -12687,11 +12700,32 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   function act(id, action) {
     moderate(id, action)
       .then(function () {
-        say(action === 'delete' ? 'ลบข้อความแล้ว' : (action === 'pin' ? 'ปักหมุดแล้ว' : 'เลิกปักหมุดแล้ว'),
-            '', action === 'delete' ? 'warn' : 'ok');
+        say(action === 'delete' ? 'ลบข้อความแล้ว'
+          : (action === 'pin' ? 'ปักหมุดแล้ว' : 'เลิกปักหมุดแล้ว'),
+          '', action === 'delete' ? 'warn' : 'ok');
         return refresh();
       })
       .catch(function (e) { say('ทำรายการไม่สำเร็จ', e.message, 'bad'); });
+  }
+
+  /* ซ้อนได้ไม่จำกัดชั้นแบบ reddit — วาดแบบเวียนซ้ำ
+     การเยื้องหยุดที่ MAX_INDENT ไม่งั้นบทสนทนายาวๆ จะบีบจนอ่านไม่ได้บนมือถือ */
+  function renderBranch(parentId, byParent, depth, host) {
+    var kids = byParent[parentId];
+    if (!kids || !kids.length) return;
+
+    var wrap = document.createElement('div');
+    wrap.className = 'post__replies';
+    if (depth >= MAX_INDENT) wrap.classList.add('post__replies--flat');
+
+    kids.sort(function (a, b) { return a.created_at < b.created_at ? -1 : 1; })
+        .forEach(function (k) {
+          var el = postEl(k, depth);
+          renderBranch(k.id, byParent, depth + 1, el);
+          wrap.appendChild(el);
+        });
+
+    host.appendChild(wrap);
   }
 
   function render(rows) {
@@ -12699,27 +12733,22 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     var list = $('board-list');
     list.innerHTML = '';
 
-    var tops = rows.filter(function (r) { return !r.parent_id; });
     var byParent = {};
+    var tops = [];
     rows.forEach(function (r) {
-      if (!r.parent_id) return;
-      (byParent[r.parent_id] = byParent[r.parent_id] || []).push(r);
+      if (r.parent_id) (byParent[r.parent_id] = byParent[r.parent_id] || []).push(r);
+      else tops.push(r);
     });
 
     if (!tops.length) { setState('empty'); return; }
     setState('ready');
 
-    tops.forEach(function (p) {
-      var el = postEl(p, false);
-      var kids = (byParent[p.id] || []).sort(function (a, b) {
-        return a.created_at < b.created_at ? -1 : 1;   // ตอบกลับเรียงเก่า→ใหม่ อ่านเป็นบทสนทนา
-      });
-      if (kids.length) {
-        var wrap = document.createElement('div');
-        wrap.className = 'post__replies';
-        kids.forEach(function (k) { wrap.appendChild(postEl(k, true)); });
-        el.appendChild(wrap);
-      }
+    tops.sort(function (a, b) {
+      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+      return a.created_at < b.created_at ? 1 : -1;
+    }).forEach(function (p) {
+      var el = postEl(p, 0);
+      renderBranch(p.id, byParent, 1, el);
       list.appendChild(el);
     });
 
@@ -12742,25 +12771,64 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 
   /* ==================================================================
      รหัสประจำตัว
-     ไม่ใช่ระบบยืนยันตัวตน — พิมพ์เลขอะไรก็ได้ มันคือป้ายชื่อให้รู้ว่าใครพูด
+     ปกติคือเลข 6 หลัก ช่องจะตัดให้เองไม่ให้เกิน
+     แต่ถ้าพิมพ์ตัวอักษรลงไป ช่องจะยอมให้พิมพ์ยาวต่อ แล้วค่าที่ได้จะถูก
+     ส่งไปถาม server ว่าเป็นรหัสแอดมินหรือเปล่า
      ================================================================== */
   function requireId() {
     if (studentId()) return true;
-    $('board-gate').hidden = false;
-    $('gate-input').focus();
+    openGate('');
     return false;
   }
 
-  function saveId() {
-    var v = ($('gate-input').value || '').trim();
-    if (!/^[0-9]{6}$/.test(v)) {
-      $('gate-err').textContent = 'ต้องเป็นตัวเลข 6 หลักเท่านั้น';
+  function openGate(prefill) {
+    $('gate-input').value = prefill || '';
+    $('gate-err').textContent = '';
+    $('board-gate').hidden = false;
+    $('gate-input').focus();
+  }
+
+  function submitGate() {
+    var raw = ($('gate-input').value || '').trim();
+    if (!raw) return;
+
+    // เลข 6 หลักล้วน = ผู้ใช้ทั่วไป
+    if (/^[0-9]{6}$/.test(raw)) {
+      lsSet(ID_KEY, raw);
+      $('board-gate').hidden = true;
+      paintWho();
+      render(cache);
       return;
     }
-    lsSet(ID_KEY, v);
-    $('gate-err').textContent = '';
-    $('board-gate').hidden = true;
-    paintWho();
+
+    // อย่างอื่น: ลองถาม server เงียบๆ ว่าเป็นรหัสแอดมินไหม
+    if (/^[0-9]{5}[^0-9]/.test(raw)) {
+      $('gate-save').disabled = true;
+      tryAdminLogin(raw).then(function (displayId) {
+        $('gate-save').disabled = false;
+        if (!displayId) {
+          // ไม่ตรงก็บอกเหมือนกรอกผิดธรรมดา ไม่ใบ้ว่ามีระบบแอดมินอยู่
+          $('gate-err').textContent = 'ต้องเป็นตัวเลข 6 หลักเท่านั้น';
+          return;
+        }
+        // ตรง — เข้าโหมดแอดมินแบบเงียบ ไม่มีป้าย ไม่มีปุ่มโผล่ที่ไหน
+        var already = adminSecret() === raw;
+        if (already) {
+          lsDel(ADMIN_KEY);
+          say('ออกจากโหมดแอดมินแล้ว', '', 'warn');
+        } else {
+          lsSet(ADMIN_KEY, raw);
+          say('เข้าโหมดแอดมินแล้ว', 'เครื่องนี้ลบและปักหมุดได้', 'ok');
+        }
+        lsSet(ID_KEY, displayId);
+        $('board-gate').hidden = true;
+        paintWho();
+        render(cache);
+      });
+      return;
+    }
+
+    $('gate-err').textContent = 'ต้องเป็นตัวเลข 6 หลักเท่านั้น';
   }
 
   function paintWho() {
@@ -12768,7 +12836,6 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     $('board-who').textContent = id ? id : 'ยังไม่ได้กรอก';
     $('board-compose').hidden = !id;
     $('board-needid').hidden = !!id;
-    $('board-admin-badge').hidden = !isAdmin();
   }
 
   /* ==================================================================
@@ -12779,16 +12846,24 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 
     paintWho();
 
-    $('gate-save').addEventListener('click', saveId);
-    $('gate-input').addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') saveId();
+    var gi = $('gate-input');
+    /* ตัดให้เหลือ 6 ตัวเฉพาะตอนที่พิมพ์เป็นตัวเลขล้วน
+       พอมีตัวอักษรปนปุ๊บ ช่องจะปลดล็อกให้พิมพ์ยาวได้ */
+    gi.addEventListener('input', function () {
+      if (/^[0-9]+$/.test(gi.value) && gi.value.length > 6) {
+        gi.value = gi.value.slice(0, 6);
+      } else if (gi.value.length > 64) {
+        gi.value = gi.value.slice(0, 64);
+      }
     });
+    gi.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') submitGate();
+    });
+
+    $('gate-save').addEventListener('click', submitGate);
+    $('gate-cancel').addEventListener('click', function () { $('board-gate').hidden = true; });
     $('board-needid').addEventListener('click', function () { requireId(); });
-    $('board-changeid').addEventListener('click', function () {
-      $('gate-input').value = studentId();
-      $('board-gate').hidden = false;
-      $('gate-input').focus();
-    });
+    $('board-changeid').addEventListener('click', function () { openGate(''); });
 
     var ta = $('compose-input');
     var counter = $('compose-count');
@@ -12814,29 +12889,9 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 
     $('board-retry').addEventListener('click', function () { refresh(true); });
 
-    /* โหมดแอดมิน — ผูกกับเครื่องนี้เครื่องเดียว ไม่มีบัญชี ไม่ล็อก IP
-       รหัสเก็บใน localStorage ของเครื่องนี้ และถูกตรวจฝั่ง server ทุกครั้ง */
-    $('board-adminbtn').addEventListener('click', function () {
-      if (isAdmin()) {
-        if (!window.confirm('ออกจากโหมดแอดมินบนเครื่องนี้?')) return;
-        lsDel(ADMIN_KEY);
-        paintWho();
-        render(cache);
-        say('ออกจากโหมดแอดมินแล้ว', '', 'warn');
-        return;
-      }
-      var s = window.prompt('ใส่รหัสแอดมิน (เก็บไว้ในเครื่องนี้เครื่องเดียว)');
-      if (!s) return;
-      lsSet(ADMIN_KEY, s.trim());
-      paintWho();
-      render(cache);
-      say('เข้าโหมดแอดมินแล้ว', 'เครื่องนี้ลบและปักหมุดข้อความได้', 'ok');
-    });
-
     refresh(true);
   }
 
-  /* หน้ากระดานจะโหลดข้อมูลเฉพาะตอนเปิดดูอยู่ และหยุด poll เมื่อออกไป */
   var timer = null;
   window.wunvitBoardEnter = function () {
     if (!CONFIGURED) { setState('off'); return; }

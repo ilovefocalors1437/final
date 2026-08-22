@@ -690,11 +690,6 @@ body[data-route="page"] .bg-scrim{
 .board__idrow{ display:flex; align-items:center; gap:var(--s2); flex-wrap:wrap; }
 .board__idlabel{ font-size:0.82rem; color:var(--text-faint); }
 .board__idval{ font-size:1rem; font-weight:600; color:var(--accent); letter-spacing:0.08em; }
-.board__adminbadge{
-  font-family:var(--font-mono); font-size:0.62rem; letter-spacing:0.1em;
-  color:var(--warn); border:1px solid var(--warn); background:var(--warn-tint);
-  border-radius:var(--r-full); padding:2px 8px;
-}
 .board__idacts{ display:flex; gap:var(--s2); }
 .btn--sm{ min-height:34px; font-size:0.82rem; padding:0 0.75rem; width:auto; }
 
@@ -771,3 +766,11 @@ body[data-route="page"] .bg-scrim{
 }
 .gate__input:focus{ border-color:var(--accent); }
 .gate__err{ font-size:0.8rem; color:var(--bad); min-height:1.1em; }
+.gate__acts{ display:flex; gap:var(--s2); }
+.gate__acts .btn{ flex:1; }
+/* ช่องกรอกยาวเกิน 6 ได้ (กรณีพิมพ์รหัสยาว) — ลดขนาดตัวอักษรตามความยาว */
+.gate__input{ font-size:clamp(0.95rem, 4.5vw, 1.5rem); }
+
+/* ตอบกลับซ้อนได้ไม่จำกัด — พอถึงชั้นลึกสุดก็เลิกเยื้อง ไม่งั้นบีบจนอ่านไม่ออก */
+.post__replies--flat{ padding-left:0; border-left:0; }
+.post__replies--flat > .post{ border-left:2px solid var(--line-soft); border-radius:0 var(--r-md) var(--r-md) 0; }

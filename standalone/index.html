@@ -11224,6 +11224,22 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
   ];
   var TOTAL = BASES.length;
 
+  /* ------------------------------------------------------------------
+     ADMIN MASTER CODE
+     Scanning this stamps every station at once, and scanning it again on an
+     already-complete passport clears the device. It is for the organiser's own
+     testing — there is no reset button in the app, so this doubles as the undo.
+
+     WARNING: a QR code carries plain text and nothing else, so this string is
+     the entire secret. `all_qrcode` is guessable — a student who wonders "what
+     if I make a QR that says all_qrcode" can generate one in a browser in ten
+     seconds and claim a prize without visiting a single station. If that
+     matters, change this to something unguessable, e.g.
+         'all_qrcode_h7q2xk49'
+     and re-run `python make_qr_codes.py --force` to reprint it.
+     ------------------------------------------------------------------ */
+  var ADMIN_CODE = 'all_qrcode';
+
   var BY_ID = {};
   BASES.forEach(function (b) { BY_ID[b.id.toLowerCase()] = b; });
 
@@ -11286,6 +11302,14 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
     data.stamps[id] = new Date().toISOString();
     writeStore(data);
   }
+  function stampEverything() {
+    var data = readStore();
+    var now = new Date().toISOString();
+    BASES.forEach(function (b) { if (!data.stamps[b.id]) data.stamps[b.id] = now; });
+    writeStore(data);
+  }
+  function clearEverything() { writeStore({ v: 2, stamps: {} }); }
+
   /* Every group at or above its threshold. */
   function isEligible() {
     return GROUPS.every(function (g) { return countIn(g.key) >= g.need; });
@@ -12006,6 +12030,40 @@ function findAlignmentPattern(matrix, alignmentPatternQuads, topRight, topLeft, 
 
     // Pause so one code can't fire twice inside a frame burst.
     cooldownUntil = performance.now() + 1500;
+
+    /* Admin master code, checked before the station table so it can never be
+       shadowed by a station id. */
+    if (text.toLowerCase() === ADMIN_CODE.toLowerCase()) {
+      lastHandled = text;
+      /* This code toggles, so a lingering camera would silently undo what it
+         just did. Hold it off well past the time it takes to lower the phone. */
+      cooldownUntil = performance.now() + 5000;
+      var wasComplete = stampedCount() === TOTAL;
+
+      if (wasComplete) {
+        clearEverything();
+        renderAll();
+        setMode('warn', 'ADMIN RESET');
+        setResult('dup', '⟲', 'ล้างแสตมป์ทั้งหมดแล้ว (admin)',
+          'เครื่องนี้กลับไปเป็น 0/' + TOTAL + ' — สแกนรหัสนี้อีกครั้งเพื่อเติมให้ครบ');
+        notify('ล้างแสตมป์ทั้งหมดแล้ว', 'admin · เครื่องนี้กลับไปเป็น 0/' + TOTAL, 'warn');
+        beep(300, 150);
+        buzz([50, 40, 50]);
+      } else {
+        stampEverything();
+        renderAll();
+        camEl.classList.remove('is-hit');
+        void camEl.offsetWidth;
+        camEl.classList.add('is-hit');
+        setMode('ok', 'ADMIN');
+        setResult('ok', '★', 'เติมแสตมป์ครบทุกฐานแล้ว (admin)',
+          TOTAL + '/' + TOTAL + ' ผ่านเกณฑ์ทั้งสองกลุ่ม — สแกนรหัสนี้อีกครั้งเพื่อล้างทั้งหมด');
+        notify('เติมครบ ' + TOTAL + '/' + TOTAL + ' แล้ว', 'admin · สแกนซ้ำอีกครั้งเพื่อล้างทั้งหมด', 'ok');
+        beep(660, 120); setTimeout(function () { beep(880, 180); }, 130);
+        buzz([60, 50, 60, 50, 120]);
+      }
+      return;
+    }
 
     var base = BY_ID[text.toLowerCase()];
 

@@ -386,7 +386,37 @@ Two things that only showed up under test:
 - The decoded payload of an unknown QR goes into the notification body. That is
   untrusted input, so the body is set with `textContent`, never `innerHTML`.
 
-## 19. Done means
+## 19. Admin master code
+
+`all_qrcode` (printed as `qr code/all.png`) is the organiser's own code. It is
+checked *before* the station lookup so a station id can never shadow it, and it is
+deliberately not a member of `BASES` — `TOTAL` stays 19 and it never appears in any
+list or counter.
+
+It **toggles**: on an incomplete passport it stamps all 19; on a complete one it
+clears the device. That second half exists because the visible reset button was
+removed, leaving the organiser no way to undo a test run.
+
+Two things the toggle forced:
+
+- A 5-second cooldown after an admin action, not the usual 1.5. At 1.5s, holding the
+  camera on the code after it filled would silently clear it again, and the organiser
+  could walk away from a wiped device believing it was complete.
+- The result panel and notification say "สแกนซ้ำอีกครั้งเพื่อล้างทั้งหมด" so the
+  toggle is stated rather than discovered.
+
+**The payload is the entire secret, and `all_qrcode` is guessable.** A student who
+thinks to generate a QR containing that string wins a prize without visiting a
+station. This was raised with the user, who chose the readable name; the constant
+sits at the top of `app.js` with the swap documented, so hardening it later is a
+one-line change plus `make_qr_codes.py --force`.
+
+`existing_payloads()` in `make_qr_codes.py` now identifies codes by **decoding** them
+rather than by filename. The codes had been renamed to short names (`gh.png`), so the
+filename check silently stopped matching and a rerun regenerated all nineteen as
+duplicates.
+
+## 20. Done means
 
 - Landing: Osiris **PASSPORT**, background under a black overlay, ring of three card
   types (scan / progress / reward), all three navigate.

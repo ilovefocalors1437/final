@@ -36,17 +36,44 @@ INNOVATION_IDS = [
 ]
 
 
+# The organiser's master code. Not a station: scanning it fills every stamp at
+# once (and clears them if scanned again on a complete passport). Keep this
+# string in step with ADMIN_CODE in assets/js/app.js.
+ADMIN_ID = "all_qrcode"
+
+
 def wanted_payloads():
-    return [c.lower() + "_qrcode" for c in MAJOR_CODES] + INNOVATION_IDS
+    return [c.lower() + "_qrcode" for c in MAJOR_CODES] + INNOVATION_IDS + [ADMIN_ID]
 
 
 def existing_payloads(save_dir):
-    """Payloads already on disk, read from the filename stem (drops _<date>_<time>)."""
+    """Payloads already on disk, read by decoding each image.
+
+    Reading the filename instead would be faster but wrong: the codes have been
+    renamed to short names (gh.png rather than gh_qrcode_<date>.png), and a file
+    named anything at all still carries whatever payload it was generated with.
+    Decoding is the only answer that survives a rename.
+
+    Falls back to the filename stem if OpenCV isn't installed.
+    """
+    try:
+        import cv2
+    except ImportError:
+        cv2 = None
+
     found = {}
     for path in glob.glob(os.path.join(save_dir, "*.png")):
-        stem = os.path.splitext(os.path.basename(path))[0]
-        payload = re.sub(r"_\d{8}_\d{6}$", "", stem).lower()
-        found[payload] = path
+        payload = None
+        if cv2 is not None:
+            try:
+                text, _, _ = cv2.QRCodeDetector().detectAndDecode(cv2.imread(path))
+                payload = text.strip() or None
+            except Exception:
+                payload = None
+        if payload is None:
+            stem = os.path.splitext(os.path.basename(path))[0]
+            payload = re.sub(r"_\d{8}_\d{6}$", "", stem)
+        found[payload.lower()] = path
     return found
 
 
